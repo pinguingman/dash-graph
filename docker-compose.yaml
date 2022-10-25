@@ -1,0 +1,32 @@
+version: '3.3'
+
+services:
+  dash:
+    build: .
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+    environment:
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:123@postgres:5432/postgres
+    depends_on:
+      - postgres
+    command:
+      gunicorn --workers=2 --bind 0.0.0.0:8000 dash_app:app_server
+
+  postgres:
+    image: postgres:11
+    volumes:
+      - $HOME/postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: 123
+    restart: unless-stopped
+
+  data_generator:
+    build: .
+    restart: unless-stopped
+    environment:
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:123@postgres:5432/postgres
+    depends_on:
+      - postgres
+    command:
+      python /app/data_generator.py
